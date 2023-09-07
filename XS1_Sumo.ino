@@ -23,6 +23,8 @@
 #define Right_Motor_Speed 9
 #define Left_Motor_Direction 13
 #define Left_Motor_Speed 5
+
+#define MAX_MOTOR_VALUE 255
 //// Speed & Last Remembered Sensor Variables ////
 int Speed2=200;
 int Last_Value=1;
@@ -37,12 +39,12 @@ void Motor(int LeftMotorValue, int RightMotorValue) {
   }
   else if (LeftMotorValue > 0){
     digitalWrite(Right_Motor_Direction, HIGH);
-    analogWrite(Right_Motor_Speed, 255 -LeftMotorValue);
+    analogWrite(Right_Motor_Speed, MAX_MOTOR_VALUE -LeftMotorValue);
   }
   else
   {
     digitalWrite(Right_Motor_Direction, HIGH);
-    analogWrite(Right_Motor_Speed, 255);
+    analogWrite(Right_Motor_Speed, MAX_MOTOR_VALUE);
   }
   if (RightMotorValue < 0) {
     RightMotorValue = abs(RightMotorValue);
@@ -51,12 +53,12 @@ void Motor(int LeftMotorValue, int RightMotorValue) {
   }
   else if (RightMotorValue > 0) {
     digitalWrite(Left_Motor_Direction, HIGH);
-    analogWrite(Left_Motor_Speed, 255 - RightMotorValue);
+    analogWrite(Left_Motor_Speed, MAX_MOTOR_VALUE - RightMotorValue);
   }
   else
   {
     digitalWrite(Left_Motor_Direction, HIGH);
-    analogWrite(Left_Motor_Speed, 255);
+    analogWrite(Left_Motor_Speed, MAX_MOTOR_VALUE);
   }
 }
 
@@ -64,11 +66,19 @@ void Motor(int LeftMotorValue, int RightMotorValue) {
 void MotorStop()
 {
   digitalWrite(Left_Motor_Direction, HIGH);
-  analogWrite(Left_Motor_Speed, 255);
+  analogWrite(Left_Motor_Speed, MAX_MOTOR_VALUE);
   digitalWrite(Right_Motor_Direction, HIGH);
-  analogWrite(Right_Motor_Speed, 255);
+  analogWrite(Right_Motor_Speed, MAX_MOTOR_VALUE);
 }
 
+void preventTipOver(){
+  /* The bot is pretty top heavy and has a propensity to tip over.
+  To handle sudden changes in direction lets stop for a short moment and then continue.
+  This might be overkill, testing was on an uneven test area.
+  */
+  MotorStop();
+  delay(20);
+}
 
 void traditionalTimerStart(){
   while(digitalRead(Right_Button)==1 && digitalRead(Left_Button)==1) // While loop for waiting start button push. (That push can be one of both button)
@@ -124,8 +134,10 @@ void loop() {
   {
   Motor(-Speed2,-Speed2);
   delay(150); // 150mS Retreat
+  preventTipOver();
   Motor(-Speed2,Speed2);
   delay(200); // 200mS Turning
+  preventTipOver();
   Motor(Speed2,Speed2);
   }
 
